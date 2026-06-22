@@ -1,5 +1,32 @@
 AllCops:
   TargetRubyVersion: 3.2
+  SuggestExtensions: false
+
+Naming/FileName:
+  Exclude:
+    - "lib/shrine-storage-azure-blob.rb"
+
+Metrics/ClassLength:
+  Exclude:
+    - "lib/shrine/storage/azure_blob.rb"
+
+Metrics/MethodLength:
+  Exclude:
+    - "lib/shrine/storage/azure_blob.rb"
+    - "test/azure_blob_test.rb"
+
+Metrics/ParameterLists:
+  Exclude:
+    - "lib/shrine/storage/azure_blob.rb"
+
+Metrics/AbcSize:
+  Exclude:
+    - "test/azure_blob_test.rb"
+
+Style/Documentation:
+  Exclude:
+    - "lib/shrine/storage/azure_blob.rb"
+    - "test/azure_blob_test.rb"
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes

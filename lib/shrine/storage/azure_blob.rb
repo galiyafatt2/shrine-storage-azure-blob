@@ -36,8 +36,8 @@ class Shrine
 
       def open(id, **options)
         StringIO.new(fetch_blob(path_for(id), options)).tap(&:binmode)
-      rescue ::AzureBlob::Http::FileNotFoundError => error
-        raise Shrine::FileNotFound, error.message
+      rescue ::AzureBlob::Http::FileNotFoundError => e
+        raise Shrine::FileNotFound, e.message
       end
 
       def url(id, expires_in: DEFAULT_URL_TTL, filename: nil, disposition: nil, content_type: nil, public: @public, **)
@@ -70,7 +70,8 @@ class Shrine
         delete_prefixed("")
       end
 
-      def presign(id, method: "PUT", expires_in: DEFAULT_URL_TTL, content_type: nil, filename: nil, disposition: nil, metadata: {}, **)
+      def presign(id, method: "PUT", expires_in: DEFAULT_URL_TTL, content_type: nil, filename: nil, disposition: nil,
+                  metadata: {}, **)
         headers = {
           "x-ms-blob-type" => "BlockBlob"
         }
@@ -104,7 +105,7 @@ class Shrine
       end
 
       def fetch_blob(path, options)
-        blob = client.get_blob(path, extract_range_options(options))
+        blob = client.get_blob(path, extract_range_options(options)).dup
         blob.force_encoding(Encoding::BINARY)
       end
 

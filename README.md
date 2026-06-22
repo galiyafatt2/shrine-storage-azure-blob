@@ -1,38 +1,155 @@
-# Shrine::Storage::Azure::Blob
+# shrine-storage-azure-blob
 
-TODO: Delete this and the text below, and describe your gem
+`shrine-storage-azure-blob` is a Shrine storage adapter for Azure Blob Storage.
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/shrine/storage/azure/blob`. To experiment with that code, run `bin/console` for an interactive prompt.
+It supports:
+
+- direct uploads via short-lived SAS URLs
+- signed private read URLs
+- configurable container prefixes such as `cache/` and `store/`
+- private or public URL generation
+
+This adapter is built on top of the [`azure-blob`](https://rubygems.org/gems/azure-blob) gem.
 
 ## Installation
-
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
 
 Install the gem and add to the application's Gemfile by executing:
 
 ```bash
-bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+bundle add shrine-storage-azure-blob
 ```
 
 If bundler is not being used to manage dependencies, install the gem by executing:
 
 ```bash
-gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+gem install shrine-storage-azure-blob
 ```
 
 ## Usage
 
-TODO: Write usage instructions here
+Require the adapter:
+
+```ruby
+require "shrine/storage/azure_blob"
+```
+
+Configure Shrine storages:
+
+```ruby
+Shrine.storages = {
+  cache: Shrine::Storage::AzureBlob.new(
+    account_name: ENV.fetch("STORAGE_ACCOUNT_NAME"),
+    access_key: ENV.fetch("STORAGE_ACCESS_KEY"),
+    container: ENV.fetch("STORAGE_CONTAINER", "uploads"),
+    prefix: "cache"
+  ),
+  store: Shrine::Storage::AzureBlob.new(
+    account_name: ENV.fetch("STORAGE_ACCOUNT_NAME"),
+    access_key: ENV.fetch("STORAGE_ACCESS_KEY"),
+    container: ENV.fetch("STORAGE_CONTAINER", "uploads"),
+    prefix: "store"
+  )
+}
+```
+
+### Direct uploads
+
+Use `#presign` to generate a short-lived SAS URL for browser uploads:
+
+```ruby
+presign = Shrine.storages[:cache].presign(
+  "example.png",
+  content_type: "image/png",
+  metadata: { filename: "example.png" }
+)
+```
+
+The return value is a hash with:
+
+- `:method`
+- `:url`
+- `:headers`
+
+The browser should upload the file directly to the returned Azure Blob URL with the returned headers.
+
+### Private file URLs
+
+By default, `#url` returns a signed private read URL:
+
+```ruby
+Shrine.storages[:store].url("avatars/user.png")
+```
+
+To generate public URLs instead, initialize the storage with `public: true`.
+
+### Container creation
+
+The adapter exposes `#ensure_container!`:
+
+```ruby
+Shrine.storages[:cache].ensure_container!
+```
+
+That is useful for bootstrapping empty environments, but in most deployments container creation should be handled by infrastructure or a deployment task.
+
+### Initialization options
+
+Supported initializer options:
+
+- `account_name:` Azure Storage Account name
+- `access_key:` Azure Storage Account access key
+- `container:` blob container name
+- `prefix:` optional blob key prefix
+- `host:` optional blob host override
+- `public:` if `true`, `#url` returns unsigned public URLs
+
+Additional keyword arguments are forwarded to `AzureBlob::Client`.
+
+## Notes
+
+- This adapter currently uses account key authentication.
+- Upload presigning uses Azure SAS URLs with create/write permissions.
+- Private read URLs use signed SAS URLs with read permission.
+- `ActionDispatch::Http::ContentDisposition` is used to format download disposition headers, so `actionpack` is a runtime dependency.
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+After checking out the repo, run:
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+```bash
+bin/setup
+bundle exec rake test
+```
+
+You can also run:
+
+```bash
+bin/console
+```
+
+to experiment with the adapter interactively.
+
+To install this gem locally:
+
+```bash
+bundle exec rake install
+```
+
+To release a new version:
+
+1. Update the version in `lib/shrine/storage/azure_blob/version.rb`
+2. Commit the change
+3. Run:
+
+```bash
+bundle exec rake release
+```
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/shrine-storage-azure-blob.
+Bug reports and pull requests are welcome on GitHub:
+
+- https://github.com/galiyafatt2/shrine-storage-azure-blob
 
 ## License
 
