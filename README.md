@@ -13,10 +13,16 @@ This adapter is built on top of the [`azure-blob`](https://rubygems.org/gems/azu
 
 ## Installation
 
-Install the gem and add to the application's Gemfile by executing:
+Add the gem to your application's `Gemfile`:
+
+```ruby
+gem "shrine-storage-azure-blob", "~> 0.1.0"
+```
+
+Then install dependencies:
 
 ```bash
-bundle add shrine-storage-azure-blob
+bundle install
 ```
 
 If bundler is not being used to manage dependencies, install the gem by executing:
